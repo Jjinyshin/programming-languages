@@ -2,9 +2,21 @@
 // AST for S
 import java.util.*;
 
+// 들여쓰기를 활용하여 트리 형태로 출력
+class Indent{
+    public static void display(int level, String s) {
+        String tab = "";
+        System.out.println();
+        for (int i=0; i<level; i++)
+            tab = tab + "      ";
+        System.out.print(tab + s);
+    }
+
 abstract class Command {
     // Command = Decl | Function | Stmt
     Type type =Type.UNDEF;
+    // 자식클래스의 필수 구현을 위해 추상클래스로 선언
+    abstract public void display(int l);
 }
 
 class Decls extends ArrayList<Decl> {
@@ -13,6 +25,13 @@ class Decls extends ArrayList<Decl> {
     Decls() { super(); };
     Decls(Decl d) {
 	    this.add(d);
+    }
+
+    public void display(int l){
+        Indent.display(l, "Decls");
+        for(Decl d : this){
+            d.display(l+1);
+        }
     }
 }
 
@@ -32,7 +51,15 @@ class Decl extends Command {
 
     Decl (String s, Type t, Expr e) {
         id = new Identifier(s); type = t; expr = e;
-    } // declaration 
+    } // declaration
+
+    public void display(int level){
+        Indent.display(level, "Decl");
+        type.display(level+1);
+        id.display(level+1);
+        if (expr != null)
+            expr.display(level+1);
+    }
 }
 
 class Functions extends ArrayList<Function> {
@@ -52,6 +79,7 @@ class Function extends Command  {
     public String toString ( ) { 
        return id.toString()+params.toString(); 
     }
+    public void display(int level){}
 }
 
 class Type {
@@ -69,6 +97,10 @@ class Type {
     
     protected String id;
     protected Type(String s) { id = s; }
+    public void display(int level) {
+        Indent.display(level, "Type: "+ id);
+    }
+
     public String toString ( ) { return id; }
 }
 
@@ -85,6 +117,7 @@ class ProtoType extends Type {
 
 abstract class Stmt extends Command {
     // Stmt = Empty | Stmts | Assignment | If  | While | Let | Read | Print
+    public void display(int level){}
 }
 
 class Empty extends Stmt {
@@ -101,6 +134,13 @@ class Stmts extends Stmt {
 
     Stmts(Stmt s) {
 	     stmts.add(s);
+    }
+
+    public void display(int l){
+        Indent.display(l, "Stmts");
+        for(Stmt s : stmts){
+            s.display(l+1);
+        }
     }
 }
 
@@ -119,6 +159,15 @@ class Assignment extends Stmt {
         ar = a;
         expr = e;
     }
+
+    public void display(int level){
+        Indent.display(level, "Assignment");
+        if (id != null)
+            id.display(level+1);
+        if (ar != null)
+            ar.display(level+1);
+        expr.display(level+1);
+    }
 }
 
 class If extends Stmt {
@@ -133,6 +182,13 @@ class If extends Stmt {
     If (Expr t, Stmt tp, Stmt ep) {
         expr = t; stmt1 = tp; stmt2 = ep; 
     }
+
+    public void display(int level){
+        Indent.display(level, "If");
+        expr.display(level+1);
+        stmt1.display(level+1);
+        stmt2.display(level+1);
+    }
 }
 
 class While extends Stmt {
@@ -142,6 +198,12 @@ class While extends Stmt {
 
     While (Expr t, Stmt b) {
         expr = t; stmt = b;
+    }
+
+    public void display(int level){
+        Indent.display(level, "While");
+        expr.display(level+1);
+        stmt.display(level+1);
     }
 }
 
@@ -162,6 +224,12 @@ class Let extends Stmt {
 	    funs = fs;
         stmts = ss;
     }
+
+    public void display(int level){
+        Indent.display(level, "Let");
+        decls.display(level+1);
+        stmts.display(level+1);
+    }
 }
 
 class Read extends Stmt {
@@ -171,6 +239,11 @@ class Read extends Stmt {
     Read (Identifier v) {
         id = v;
     }
+
+    public void display(int level){
+        Indent.display(level, "Read");
+        id.display(level+1);
+    }
 }
 
 class Print extends Stmt {
@@ -179,6 +252,11 @@ class Print extends Stmt {
 
     Print (Expr e) {
         expr = e;
+    }
+
+    public void display(int level){
+        Indent.display(level, "Print");
+        expr.display(level+1);
     }
 }
 
@@ -243,6 +321,10 @@ class Identifier extends Expr {
     public boolean equals (Object obj) {
         String s = ((Identifier) obj).id;
         return id.equals(s);
+    }
+
+    public void display(int level){
+        Indent.display(level, "Identifier: " + id);
     }
 }
 
@@ -326,6 +408,10 @@ class Value extends Expr {
         if (type == Type.ARRAY) return "" + arrValue();
         return "undef";
     }
+
+    public void display(int level){
+        Indent.display(level, "Value: "+value.toString());
+    }
 }
 
 class Binary extends Expr {
@@ -336,6 +422,13 @@ class Binary extends Expr {
     Binary (Operator o, Expr e1, Expr e2) {
         op = o; expr1 = e1; expr2 = e2;
     } // binary
+
+    public void display(int level){
+        Indent.display(level, "Binary");
+        op.display(level+1);
+        expr1.display(level+1);
+        expr2.display(level+1);
+    }
 }
 
 class Unary extends Expr {
@@ -348,6 +441,11 @@ class Unary extends Expr {
         expr = e;
     } // unary
 
+    public void display(int level){
+        Indent.display(level, "Unary");
+        op.display(level+1);
+        expr.display(level+1);
+    }
 }
 
 class Operator {
@@ -363,5 +461,9 @@ class Operator {
 
     public boolean equals(Object obj) { 
 	return val.equals(obj); 
+    }
+
+    public void display(int level) {
+        Indent.display(level, "Operator: " + val);
     }
 }
