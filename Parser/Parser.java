@@ -175,6 +175,10 @@ public class Parser {
     //
     // parse read statement
     // 
+        match(Token.READ);
+        Identifier id = new Identifier(match(Token.ID));
+        match(Token.SEMICOLON);
+        return new Read(id);
 	return null;
     }
 
@@ -183,6 +187,10 @@ public class Parser {
     //
     // parse print statement
     // 
+        match(Token.PRINT);
+        Expr e = expr();
+        match(Token.SEMICOLON);
+        return new Print(e);
 	return null;
     }
 
@@ -239,7 +247,12 @@ public class Parser {
     //
     // parse while statement
     //
-        return null;
+        match(Token.WHILE);
+        match(Token.LPAREN);
+        Expr t = expr();
+        match(Token.RPAREN);
+        Stmt b = stmt();
+        return new While(t,b);
     }
 
     private Expr expr () {
@@ -261,6 +274,12 @@ public class Parser {
 	//
 	// parse logical operations
 	//
+        while (token == Token.AND || token == Token.OR){
+            Operator op = new Operator(match(token));
+            Expr e2 = bexp();
+            e = new Binary(op, e, e2);
+            // Binary extends Expr
+        }
         return e;
     }
 
@@ -270,6 +289,42 @@ public class Parser {
 	//
 	// parse relational operations
 	//
+        if (token == Token.LT || token == Token.LTEQ || token == Token.GT || token == Token.GTEQ || token == Token.EQUAL || token == Token.NOTEQ){
+            Expr e2 = null;
+            Operator op = null;
+            switch (token){
+                case LT:
+                    op = new Operator(match(Token.LT));
+                    e2 = aexp();
+                    e = new Binary(op, e, e2);
+                    break;
+                case LTEQ:
+                    op = new Operator(match(Token.LTEQ));
+                    e2 = aexp();
+                    e = new Binary(op, e, e2);
+                    break;
+                case GT:
+                    op = new Operator(match(Token.GT));
+                    e2 = aexp();
+                    e = new Binary(op, e, e2);
+                    break;
+                case GTEQ:
+                    op = new Operator(match(Token.GTEQ));
+                    e2 = aexp();
+                    e = new Binary(op, e, e2);
+                    break;
+                case EQUAL:
+                    op = new Operator(match(Token.EQUAL));
+                    e2 = aexp();
+                    e = new Binary(op, e, e2);
+                    break;
+                case NOTEQ:
+                    op = new Operator(match(Token.NOTEQ));
+                    e2 = aexp();
+                    e = new Binary(op, e, e2);
+                    break;
+            }
+        }
         return e;
     }
   
@@ -368,6 +423,8 @@ public class Parser {
     public static void main(String args[]) {
 	    Parser parser;
         Command command = null;
+        
+        // 두가지 방식으로 test가능
 	    if (args.length == 0) {
 	        System.out.print(">> ");
 	        Lexer.interactive = true;
